@@ -238,17 +238,26 @@ async function updatePassword() {
     return;
   }
 
-  // Success — sign them in and clear the hash
-  msgEl.textContent = '✓ Password updated! Taking you in…';
+  // Success — send them to sign-in with a pre-filled success message
+  msgEl.textContent = '✓ Password updated! Please sign in with your new password.';
   msgEl.style.background = 'rgba(16,185,129,0.15)';
   msgEl.style.color = '#6ee7b7';
   msgEl.style.border = '1px solid rgba(16,185,129,0.3)';
   msgEl.classList.remove('hidden');
   window.history.replaceState(null, '', window.location.pathname);
-  setTimeout(async () => {
-    const { data: { session } } = await state.supabase.auth.getSession();
-    if (session) await onSignedIn(session.user);
-  }, 1200);
+  await state.supabase.auth.signOut();
+  setTimeout(() => {
+    // Show login tab and carry over a success notice
+    document.getElementById('auth-reset').classList.add('hidden');
+    document.querySelector('.auth-tabs').style.display = '';
+    switchAuthTab('login');
+    const err = document.getElementById('auth-error');
+    err.textContent = '✓ Password updated! Sign in with your new password.';
+    err.style.background = 'rgba(16,185,129,0.15)';
+    err.style.borderColor = 'rgba(16,185,129,0.3)';
+    err.style.color = '#6ee7b7';
+    err.classList.remove('hidden');
+  }, 1500);
 }
 
 function showForgotPassword(show = true) {
