@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>The Legacy Code Journal</title>
+
+  <!-- PWA / iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Legacy Journal">
+  <meta name="theme-color" content="#0a0e2e">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+  <style>
+    /* ── Reset & Custom Properties ─────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg-deep:    #070b26;
+      --bg-base:    #0d1240;
+      --bg-card:    #141952;
+      --bg-lift:    #1c2368;
+      --gold:       #f0b429;
+      --gold-light: #fcd34d;
+      --gold-dim:   #8a6510;
+      --purple:     #7c3aed;
+      --purple-lt:  #a78bfa;
+      --text:       #eef1ff;
+      --text-muted: #8892c8;
+      --text-dim:   #4a5490;
+      --border:     #2a306e;
+      --success:    #10b981;
+      --danger:     #ef4444;
+      --radius:     12px;
+      --radius-sm:  8px;
+      --shadow:     0 4px 24px rgba(0,0,0,0.4);
+      --transition: 0.2s ease;
+      --safe-top:    env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left:   env(safe-area-inset-left, 0px);
+      --safe-right:  env(safe-area-inset-right, 0px);
+    }
+
+    html { height: 100%; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-deep);
+      color: var(--text);
+      min-height: 100%;
+      line-height: 1.6;
+      padding-bottom: calc(60px + var(--safe-bottom));
+      overflow-x: hidden;
+    }
+
+    /* ── Scrollbar ──────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-base); }
+    ::-webkit-scrollbar-thumb { background: var(--bg-lift); border-radius: 3px; }
+
+    /* ── Typography ─────────────────────────────────────────── */
+    h1 { font-size: clamp(1.5rem, 4vw, 2.2rem); font-weight: 700; line-height: 1.2; }
+    h2 { font-size: clamp(1.2rem, 3vw, 1.6rem); font-weight: 600; }
+    h3 { font-size: 1.1rem; font-weight: 600; }
+    p  { color: var(--text-muted); line-height: 1.7; }
+
+    .gold { color: var(--gold); }
+    .muted { color: var(--text-muted); font-size: 0.875rem; }
+    .label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+
+    /* ── Layout Utilities ───────────────────────────────────── */
+    .view { display: none; min-height: 100vh; }
+    .view.active { display: block; }
+    .container { max-width: 720px; margin: 0 auto; padding: 0 16px; }
+    .row { display: flex; gap: 12px; }
+    .col { flex: 1; min-width: 0; }
+    .stack { display: flex; flex-direction: column; gap: 12px; }
+    .center { display: flex; align-items: center; justify-content: center; flex-direction: column; }
+    .between { display: flex; align-items: center; justify-content: space-between; }
+    .gap-8 { gap: 8px; }
+    .gap-16 { gap: 16px; }
+    .mt-8 { margin-top: 8px; }
+    .mt-16 { margin-top: 16px; }
+    .mt-24 { margin-top: 24px; }
+    .mb-8 { margin-bottom: 8px; }
+    .hidden { display: none !important; }
+
+    /* ── Cards ──────────────────────────────────────────────── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .card-gold {
+      border-color: var(--gold-dim);
+      background: linear-gradient(135deg, var(--bg-card) 0%, #1e1a0a 100%);
+    }
+    .card-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--gold);
+      margin-bottom: 12px;
+    }
+
+    /* ── Buttons ────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 12px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 0.95rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all var(--transition);
+      text-decoration: none;
+      white-space: nowrap;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary {
+      background: var(--gold);
+      color: #0a0e2e;
+    }
+    .btn-primary:hover { background: var(--gold-light); }
+    .btn-secondary {
+      background: var(--bg-lift);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: #22297a; }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { color: var(--text); border-color: var(--text-muted); }
+    .btn-danger {
+      background: rgba(239,68,68,0.15);
+      color: var(--danger);
+      border: 1px solid rgba(239,68,68,0.3);
+    }
+    .btn-icon {
+      width: 40px; height: 40px; padding: 0;
+      background: var(--bg-lift);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      color: var(--text-muted);
+      font-size: 1.1rem;
+    }
+    .btn-icon:hover { color: var(--text); border-color: var(--text-muted); }
+    .btn-full { width: 100%; }
+    .btn-sm { padding: 8px 14px; font-size: 0.85rem; }
+
+    /* ── Form Elements ──────────────────────────────────────── */
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    label { font-size: 0.85rem; font-weight: 500; color: var(--text-muted); }
+    label.req::after { content: ' *'; color: var(--gold); }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="date"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+      padding: 11px 14px;
+      transition: border-color var(--transition);
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(240,180,41,0.12);
+    }
+    input::placeholder, textarea::placeholder { color: var(--text-dim); }
+    textarea { resize: vertical; min-height: 90px; }
+
+    select option { background: var(--bg-base); }
+
+    .score-row {
+      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    }
+    .score-btn {
+      width: 34px; height: 34px;
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .score-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .score-btn.active { background: var(--gold); color: #0a0e2e; border-color: var(--gold); }
+
+    /* Checkbox */
+    .check-row {
+      display: flex; align-items: flex-start; gap: 10px; cursor: pointer;
+    }
+    .check-row input[type="checkbox"] {
+      width: 18px; height: 18px; min-width: 18px; margin-top: 2px;
+      accent-color: var(--gold);
+      cursor: pointer;
+    }
+    .check-row span { font-size: 0.95rem; flex: 1; }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    .app-header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(7,11,38,0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding-top: var(--safe-top);
+    }
+    .header-inner {
+      max-width: 720px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px;
+      gap: 12px;
+    }
+    .header-logo {
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 700; font-size: 1rem; color: var(--gold);
+      text-decoration: none; cursor: pointer;
+    }
+    .header-logo svg { width: 28px; height: 28px; flex-shrink: 0; }
+    .header-actions { display: flex; gap: 8px; align-items: center; }
+    .header-back {
+      background: none; border: none; color: var(--text-muted);
+      font-size: 1.3rem; cursor: pointer; padding: 4px;
+      display: none;
+    }
+    .header-back.visible { display: block; }
+
+    /* ── Bottom Nav ─────────────────────────────────────────── */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(13,18,64,0.96);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      padding-bottom: var(--safe-bottom);
+    }
+    .nav-item {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      padding: 10px 4px; gap: 4px;
+      background: none; border: none; cursor: pointer;
+      color: var(--text-dim);
+      font-size: 0.65rem; font-weight: 500;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      transition: color var(--transition);
+    }
+    .nav-item.active { color: var(--gold); }
+    .nav-item svg { width: 22px; height: 22px; }
+
+    /* ── Page Header ────────────────────────────────────────── */
+    .page-header {
+      padding: 28px 16px 20px;
+      max-width: 720px; margin: 0 auto;
+    }
+    .page-header .eyebrow {
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.12em; color: var(--gold); margin-bottom: 6px;
+    }
+
+    /* ── Auth View ──────────────────────────────────────────── */
+    #view-auth {
+      min-height: 100vh;
+      padding-bottom: 0;
+      background: radial-gradient(ellipse at top, #1a2068 0%, #070b26 60%);
+      display: flex; flex-direction: column;
+    }
+    .auth-hero {
+      padding: 60px 24px 32px;
+      text-align: center;
+    }
+    .auth-hero .bird-logo {
+      width: 72px; height: 72px; margin: 0 auto 24px;
+    }
+    .auth-hero h1 { font-size: 2rem; margin-bottom: 8px; }
+    .auth-hero h1 span { color: var(--gold); font-style: italic; }
+    .auth-hero p { max-width: 280px; margin: 0 auto; font-size: 0.9rem; }
+    .auth-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius) var(--radius) 0 0;
+      padding: 32px 24px;
+      flex: 1;
+      max-width: 480px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    .auth-tabs { display: flex; gap: 0; margin-bottom: 28px; border-bottom: 1px solid var(--border); }
+    .auth-tab {
+      flex: 1; padding: 10px; text-align: center;
+      font-size: 0.9rem; font-weight: 600;
+      cursor: pointer; border: none; background: none;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+      transition: all var(--transition);
+    }
+    .auth-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+    .auth-error {
+      background: rgba(239,68,68,0.15);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-size: 0.875rem;
+      color: #fca5a5;
+      margin-bottom: 16px;
+    }
+
+    /* ── Setup / Config View ────────────────────────────────── */
+    #view-setup {
+      background: radial-gradient(ellipse at top, #1a2068 0%, #070b26 60%);
+    }
+
+    /* ── Dashboard ──────────────────────────────────────────── */
+    .cycle-banner {
+      background: linear-gradient(135deg, #1c1050 0%, #0d1240 100%);
+      border: 1px solid var(--gold-dim);
+      border-radius: var(--radius);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cycle-banner::before {
+      content: '';
+      position: absolute; top: -40px; right: -40px;
+      width: 120px; height: 120px;
+      background: radial-gradient(circle, rgba(240,180,41,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .cycle-dates { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+    .progress-bar {
+      height: 6px; background: var(--bg-base);
+      border-radius: 3px; overflow: hidden; margin-top: 12px;
+    }
+    .progress-fill {
+      height: 100%; background: var(--gold);
+      border-radius: 3px; transition: width 0.4s ease;
+    }
+    .progress-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; }
+    .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      text-align: center;
+    }
+    .stat-card .stat-num { font-size: 1.6rem; font-weight: 700; color: var(--gold); line-height: 1; }
+    .stat-card .stat-lbl { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; }
+    .quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .quick-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      cursor: pointer;
+      transition: all var(--transition);
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .quick-card:hover { border-color: var(--gold-dim); transform: translateY(-1px); }
+    .quick-card .qc-icon { font-size: 1.4rem; }
+    .quick-card .qc-label { font-size: 0.9rem; font-weight: 600; }
+    .quick-card .qc-sub { font-size: 0.75rem; color: var(--text-muted); }
+    .affirmation-card {
+      background: linear-gradient(135deg, rgba(124,58,237,0.15) 0%, var(--bg-card) 100%);
+      border: 1px solid rgba(124,58,237,0.3);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .affirmation-text {
+      font-style: italic;
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: var(--text);
+      border-left: 3px solid var(--purple);
+      padding-left: 14px;
+    }
+
+    /* ── Day Strip ──────────────────────────────────────────── */
+    .day-strip {
+      overflow-x: auto; -webkit-overflow-scrolling: touch;
+      scrollbar-width: none; padding: 4px 2px;
+    }
+    .day-strip::-webkit-scrollbar { display: none; }
+    .day-strip-inner { display: flex; gap: 8px; min-width: max-content; }
+    .day-chip {
+      width: 44px; height: 56px; flex-shrink: 0;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      cursor: pointer; gap: 2px;
+      transition: all var(--transition);
+    }
+    .day-chip:hover { border-color: var(--gold-dim); }
+    .day-chip.active { background: var(--gold); border-color: var(--gold); }
+    .day-chip.active .day-num { color: #0a0e2e; }
+    .day-chip.active .day-lbl { color: #0a0e2e; opacity: 0.7; }
+    .day-chip.done { border-color: var(--success); }
+    .day-chip.done .day-num { color: var(--success); }
+    .day-num { font-size: 1rem; font-weight: 700; color: var(--text-muted); }
+    .day-lbl { font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); }
+
+    /* ── Section Divider ────────────────────────────────────── */
+    .section-divider {
+      display: flex; align-items: center; gap: 12px; margin: 24px 0 16px;
+    }
+    .section-divider .line { flex: 1; height: 1px; background: var(--border); }
+    .section-divider .text {
+      font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.14em; color: var(--text-dim); white-space: nowrap;
+    }
+
+    /* ── Goal Rows ──────────────────────────────────────────── */
+    .goal-rows { display: flex; flex-direction: column; gap: 8px; }
+    .goal-row {
+      display: grid; grid-template-columns: 28px 1fr 1fr auto; gap: 8px; align-items: center;
+    }
+    .goal-row .row-num { font-size: 0.75rem; color: var(--text-dim); text-align: center; }
+    .goal-row input {
+      padding: 8px 10px; font-size: 0.875rem;
+    }
+    .goal-row .check-done {
+      width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+      background: var(--bg-base); border: 1px solid var(--border); border-radius: 6px;
+      cursor: pointer; color: var(--text-dim); font-size: 1rem; transition: all var(--transition);
+    }
+    .goal-row .check-done.done { background: var(--success); border-color: var(--success); color: white; }
+
+    /* ── Opportunity Rows ───────────────────────────────────── */
+    .opp-rows { display: flex; flex-direction: column; gap: 8px; }
+    .opp-row { display: flex; align-items: center; gap: 8px; }
+    .opp-row .row-num { font-size: 0.75rem; color: var(--text-dim); width: 16px; text-align: right; flex-shrink: 0; }
+
+    /* ── Photo Upload ───────────────────────────────────────── */
+    .photo-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .photo-zone:hover { border-color: var(--gold-dim); }
+    .photo-zone input[type="file"] { display: none; }
+    .photo-zone .photo-icon { font-size: 2rem; margin-bottom: 8px; }
+    .photo-zone p { font-size: 0.875rem; color: var(--text-muted); }
+    .photo-thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .photo-thumb {
+      position: relative; width: 72px; height: 72px;
+      border-radius: 8px; overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .photo-thumb .del-btn {
+      position: absolute; top: 2px; right: 2px;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: rgba(0,0,0,0.7); color: white;
+      font-size: 12px; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ocr-result {
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      font-size: 0.875rem;
+      margin-top: 12px;
+    }
+
+    /* ── AI Review ──────────────────────────────────────────── */
+    .review-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .review-section h3 {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 14px;
+    }
+    .review-icon { font-size: 1.2rem; }
+    .theme-tag {
+      display: inline-flex; align-items: center;
+      background: rgba(124,58,237,0.2);
+      border: 1px solid rgba(124,58,237,0.3);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 0.8rem;
+      color: var(--purple-lt);
+      margin: 3px;
+    }
+    .insight-item {
+      display: flex; gap: 10px; align-items: flex-start;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .insight-item:last-child { border-bottom: none; }
+    .insight-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 6px; }
+    .insight-dot.gold { background: var(--gold); }
+    .insight-dot.purple { background: var(--purple); }
+    .insight-dot.red { background: var(--danger); }
+    .insight-dot.green { background: var(--success); }
+    .insight-text { font-size: 0.9rem; line-height: 1.5; }
+    .loading-spinner {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      padding: 32px; color: var(--text-muted);
+    }
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Weekly Nav ─────────────────────────────────────────── */
+    .week-tabs {
+      display: flex; gap: 0;
+      background: var(--bg-base);
+      border-radius: var(--radius-sm);
+      padding: 3px;
+      margin-bottom: 20px;
+    }
+    .week-tab {
+      flex: 1; padding: 8px 4px;
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); font-size: 0.82rem; font-weight: 600;
+      border-radius: 6px;
+      transition: all var(--transition);
+    }
+    .week-tab.active {
+      background: var(--gold); color: #0a0e2e;
+    }
+
+    /* ── Contacts / Peopling ────────────────────────────────── */
+    .contact-grid { display: flex; flex-direction: column; gap: 10px; }
+    .contact-row {
+      display: grid; grid-template-columns: auto 1fr 1fr auto; gap: 8px; align-items: center;
+    }
+    .contact-row .called-btn {
+      width: 36px; height: 36px; flex-shrink: 0;
+      background: var(--bg-base); border: 1px solid var(--border);
+      border-radius: 50%; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; transition: all var(--transition);
+    }
+    .contact-row .called-btn.called { background: var(--success); border-color: var(--success); }
+    .contact-row input { padding: 8px 10px; font-size: 0.875rem; }
+    .add-row-btn {
+      width: 100%;
+      background: var(--bg-base);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-dim);
+      padding: 10px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: all var(--transition);
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .add-row-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
+
+    /* ── Settings ───────────────────────────────────────────── */
+    .settings-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .settings-section h3 {
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .api-key-field {
+      position: relative;
+    }
+    .api-key-field input { padding-right: 44px; }
+    .toggle-visibility {
+      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); font-size: 1rem;
+      padding: 4px;
+    }
+
+    /* ── Mantra Banner ──────────────────────────────────────── */
+    .mantra-banner {
+      background: linear-gradient(135deg, #1c1050, #0d1240);
+      border: 1px solid var(--gold-dim);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-bottom: 20px;
+    }
+    .mantra-text {
+      font-size: 0.85rem;
+      color: var(--gold-light);
+      font-style: italic;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    /* ── Toast Notification ─────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: calc(70px + var(--safe-bottom) + 10px); left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--bg-lift);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 20px;
+      font-size: 0.875rem;
+      color: var(--text);
+      z-index: 1000;
+      opacity: 0;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+      pointer-events: none;
+      max-width: calc(100vw - 32px);
+      text-align: center;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.success { border-color: var(--success); }
+    .toast.error { border-color: var(--danger); }
+
+    /* ── Save Indicator ─────────────────────────────────────── */
+    .save-indicator {
+      font-size: 0.75rem; color: var(--text-dim);
+      display: flex; align-items: center; gap: 4px;
+    }
+    .save-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-dim); }
+    .save-dot.saving { background: var(--gold); animation: pulse 1s infinite; }
+    .save-dot.saved { background: var(--success); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* ── Empty States ───────────────────────────────────────── */
+    .empty-state {
+      text-align: center; padding: 48px 24px;
+      color: var(--text-muted);
+    }
+    .empty-state .empty-icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.5; }
+    .empty-state h3 { color: var(--text-muted); margin-bottom: 8px; }
+    .empty-state p { font-size: 0.875rem; }
+
+    /* ── Responsive ─────────────────────────────────────────── */
+    @media (max-width: 480px) {
+      .goal-row { grid-template-columns: 22px 1fr 1fr 28px; }
+      .contact-row { grid-template-columns: auto 1fr auto; }
+      .contact-row .contact-role { display: none; }
+      .stat-grid { grid-template-columns: repeat(3, 1fr); }
+      .quick-grid { grid-template-columns: 1fr 1fr; }
+      .row { flex-direction: column; }
+    }
+    @media (min-width: 640px) {
+      .auth-box {
+        border-radius: var(--radius);
+        margin: 24px auto;
+      }
+      #view-auth { justify-content: center; padding: 24px; }
+    }
+
+    /* ── Mantras page ───────────────────────────────────────── */
+    .mantra-list { display: flex; flex-direction: column; gap: 12px; }
+    .mantra-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+    }
+    .mantra-card .mantra-code {
+      font-size: 0.65rem; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.16em; color: var(--gold); margin-bottom: 4px;
+    }
+    .mantra-card .mantra-quote {
+      font-size: 0.875rem; line-height: 1.6; color: var(--text);
+      font-style: italic;
+    }
+
+    /* Utility for truncation */
+    .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     CONFIG / SETUP VIEW  (shown if Supabase not configured)
+════════════════════════════════════════════════════════════ -->
+<div id="view-setup" class="view">
+  <div style="min-height:100vh;background:radial-gradient(ellipse at top,#1a2068 0%,#070b26 60%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;">
+    <div style="max-width:420px;width:100%;text-align:center;">
+      <div style="margin-bottom:24px;">
+        <!-- Phoenix SVG logo -->
+        <svg viewBox="0 0 80 80" style="width:72px;height:72px;margin:0 auto;" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="40" cy="40" r="38" fill="rgba(240,180,41,0.1)" stroke="rgba(240,180,41,0.3)" stroke-width="1.5"/>
+          <path d="M40 16C33 22 26 32 28 42C30 50 36 55 40 64C44 55 50 50 52 42C54 32 47 22 40 16Z" fill="#f0b429" opacity="0.8"/>
+          <path d="M40 24C36 29 32 36 34 43C36 48 38 52 40 57C42 52 44 48 46 43C48 36 44 29 40 24Z" fill="#fcd34d"/>
+          <path d="M28 35C22 32 18 38 20 44C22 50 30 52 34 47C30 46 26 42 28 35Z" fill="#7c3aed" opacity="0.7"/>
+          <path d="M52 35C58 32 62 38 60 44C58 50 50 52 46 47C50 46 54 42 52 35Z" fill="#7c3aed" opacity="0.7"/>
+        </svg>
+      </div>
+      <h1 style="font-size:1.8rem;margin-bottom:8px;">The <span class="gold">Legacy Code</span></h1>
+      <p style="margin-bottom:32px;font-size:0.9rem;">Connect your Supabase project to get started.</p>
+
+      <div class="card" style="text-align:left;">
+        <div class="stack">
+          <div class="field">
+            <label for="cfg-url">Supabase Project URL</label>
+            <input type="text" id="cfg-url" placeholder="https://xxxx.supabase.co">
+          </div>
+          <div class="field">
+            <label for="cfg-key">Supabase Anon Key</label>
+            <input type="text" id="cfg-key" placeholder="eyJh...">
+          </div>
+          <div id="cfg-error" class="auth-error hidden"></div>
+          <button class="btn btn-primary btn-full" onclick="saveConfig()">Connect & Continue</button>
+          <p style="font-size:0.8rem;text-align:center;">
+            Don't have a Supabase project?
+            <a href="https://supabase.com" target="_blank" style="color:var(--gold);">Create one free →</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     AUTH VIEW
+════════════════════════════════════════════════════════════ -->
+<div id="view-auth" class="view">
+  <div class="auth-hero">
+    <svg class="bird-logo" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="40" cy="40" r="38" fill="rgba(240,180,41,0.1)" stroke="rgba(240,180,41,0.3)" stroke-width="1.5"/>
+      <path d="M40 16C33 22 26 32 28 42C30 50 36 55 40 64C44 55 50 50 52 42C54 32 47 22 40 16Z" fill="#f0b429" opacity="0.8"/>
+      <path d="M40 24C36 29 32 36 34 43C36 48 38 52 40 57C42 52 44 48 46 43C48 36 44 29 40 24Z" fill="#fcd34d"/>
+      <path d="M28 35C22 32 18 38 20 44C22 50 30 52 34 47C30 46 26 42 28 35Z" fill="#7c3aed" opacity="0.7"/>
+      <path d="M52 35C58 32 62 38 60 44C58 50 50 52 46 47C50 46 54 42 52 35Z" fill="#7c3aed" opacity="0.7"/>
+    </svg>
+    <h1>The <span>Legacy Code</span></h1>
+    <p class="muted">Your 30-day journey to legacy begins here.</p>
+  </div>
+  <div class="auth-box">
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
+      <button class="auth-tab" onclick="switchAuthTab('signup')">Create Account</button>
+    </div>
+    <div id="auth-error" class="auth-error hidden"></div>
+    <div id="auth-login" class="stack">
+      <div class="field">
+        <label for="login-email">Email</label>
+        <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label for="login-pass">Password</label>
+        <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary btn-full" onclick="signIn()">Sign In</button>
+    </div>
+    <div id="auth-signup" class="stack hidden">
+      <div class="field">
+        <label for="signup-name">Your Name</label>
+        <input type="text" id="signup-name" placeholder="Your full name">
+      </div>
+      <div class="field">
+        <label for="signup-email">Email</label>
+        <input type="email" id="signup-email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label for="signup-pass">Password</label>
+        <input type="password" id="signup-pass" placeholder="At least 8 characters" autocomplete="new-password">
+      </div>
+      <button class="btn btn-primary btn-full" onclick="signUp()">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     MAIN APP SHELL (shown when logged in)
+════════════════════════════════════════════════════════════ -->
+<div id="app-shell" class="hidden">
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-inner">
+      <button class="header-back" id="header-back" onclick="goBack()">←</button>
+      <div class="header-logo" onclick="navigate('dashboard')">
+        <svg viewBox="0 0 40 40" fill="none">
+          <path d="M20 6C16 10 12 16 13 22C14 26 17 29 20 34C23 29 26 26 27 22C28 16 24 10 20 6Z" fill="#f0b429"/>
+          <path d="M13 18C10 16 8 20 9 23C10 26 14 27 16 24C14 24 12 22 13 18Z" fill="#7c3aed"/>
+          <path d="M27 18C30 16 32 20 31 23C30 26 26 27 24 24C26 24 28 22 27 18Z" fill="#7c3aed"/>
+        </svg>
+        <span>Legacy Code</span>
+      </div>
+      <div class="header-actions">
+        <span class="save-indicator" id="save-indicator" style="display:none;">
+          <span class="save-dot" id="save-dot"></span>
+          <span id="save-text">Saved</span>
+        </span>
+        <button class="btn-icon" onclick="navigate('settings')" title="Settings">⚙</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── DASHBOARD VIEW ─────────────────────────────────── -->
+  <div id="view-dashboard" class="view">
+    <div class="container">
+      <div class="page-header">
+        <div class="eyebrow">Welcome back</div>
+        <h1 id="dash-greeting">Good morning</h1>
+      </div>
+
+      <!-- Current Cycle Banner -->
+      <div class="cycle-banner mb-8" id="dash-cycle-banner" style="cursor:pointer;" onclick="navigate('planning')">
+        <div class="label">Current 30-Day Cycle</div>
+        <div style="font-size:1.1rem;font-weight:600;margin-top:4px;color:var(--gold);" id="dash-cycle-title">Start Your Journey</div>
+        <div class="cycle-dates" id="dash-cycle-dates">Tap to set up your 30-day plan</div>
+        <div class="progress-bar"><div class="progress-fill" id="dash-progress" style="width:0%"></div></div>
+        <div class="progress-label" id="dash-progress-label">0 of 30 days journaled</div>
+      </div>
+
+      <!-- Affirmation -->
+      <div id="dash-affirmation-wrap" class="affirmation-card mt-16 hidden">
+        <div class="label mb-8">Today's Affirmation</div>
+        <div class="affirmation-text" id="dash-affirmation-text"></div>
+      </div>
+
+      <!-- Stats -->
+      <div class="section-divider"><div class="line"></div><div class="text">This Cycle</div><div class="line"></div></div>
+      <div class="stat-grid mb-8">
+        <div class="stat-card"><div class="stat-num" id="stat-days">0</div><div class="stat-lbl">Days Done</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-streak">0</div><div class="stat-lbl">Streak</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-contacts">0</div><div class="stat-lbl">Contacts</div></div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="section-divider"><div class="line"></div><div class="text">Jump To</div><div class="line"></div></div>
+      <div class="quick-grid mb-8">
+        <div class="quick-card" onclick="navigate('daily')">
+          <div class="qc-icon">📅</div>
+          <div class="qc-label">Today's Page</div>
+          <div class="qc-sub" id="dash-today-label">Day —</div>
+        </div>
+        <div class="quick-card" onclick="navigate('weekly')">
+          <div class="qc-icon">📋</div>
+          <div class="qc-label">This Week</div>
+          <div class="qc-sub" id="dash-week-label">Week —</div>
+        </div>
+        <div class="quick-card" onclick="navigate('planning')">
+          <div class="qc-icon">🎯</div>
+          <div class="qc-label">30-Day Plan</div>
+          <div class="qc-sub">Goals &amp; Vision</div>
+        </div>
+        <div class="quick-card" onclick="navigate('review')">
+          <div class="qc-icon">✨</div>
+          <div class="qc-label">AI Review</div>
+          <div class="qc-sub">Themes &amp; Insights</div>
+        </div>
+        <div class="quick-card" onclick="navigate('peopling')">
+          <div class="qc-icon">👥</div>
+          <div class="qc-label">Peopling</div>
+          <div class="qc-sub">Your 30 contacts</div>
+        </div>
+        <div class="quick-card" onclick="navigate('mantras')">
+          <div class="qc-icon">📿</div>
+          <div class="qc-label">Mantras</div>
+          <div class="qc-sub">LEGACY &amp; CODE</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 30-DAY PLANNING VIEW ───────────────────────────── -->
+  <div id="view-planning" class="view">
+    <div class="container">
+      <div class="page-header">
+        <div class="eyebrow">30-Day Cycle</div>
+        <h2>Your Vision & Plan</h2>
+        <p style="margin-top:4px;font-size:0.85rem;">Set aside an hour. Close your eyes. See your next 30 days.</p>
+      </div>
+
+      <div class="stack">
+        <div class="card">
+          <div class="card-title">Journal Owner</div>
+          <div class="field">
+            <label for="plan-name">This Journal Belongs to</label>
+            <input type="text" id="plan-name" placeholder="Your name">
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Cycle Dates</div>
+          <div class="row">
+            <div class="field col">
+              <label for="plan-start">Starting Date</label>
+              <input type="date" id="plan-start">
+            </div>
+            <div class="field col">
+              <label for="plan-end">Ending Date</label>
+              <input type="date" id="plan-end">
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">30-Day Overview</div>
+          <div class="field">
+            <label for="plan-goals">Your Goals</label>
+            <textarea id="plan-goals" rows="5" placeholder="What do you want to accomplish? What does it look, feel, and sound like? How much money will you earn? How many new clients? What products or services? What will your health look like? Who will you be spending time with?"></textarea>
+          </div>
+        </div>
+
+        <div class="card card-gold">
+          <div class="card-title">🎯 30-Day BHAG</div>
+          <p style="font-size:0.85rem;margin-bottom:12px;">If time and money were not an issue, what is one <strong style="color:var(--gold)">Big Hairy Audacious Goal</strong> you'd achieve in the next 60 days?</p>
+          <div class="field">
+            <textarea id="plan-bhag" rows="3" placeholder="Dream big. No limits."></textarea>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">30-Day Affirmation</div>
+          <p style="font-size:0.85rem;margin-bottom:12px;">Write a powerful, positive, present-tense declaration. You'll repeat it daily.</p>
+          <div class="field">
+            <textarea id="plan-affirmation" rows="3" placeholder="I am... I claim... I declare..."></textarea>
+          </div>
+          <div style="margin-top:12px;">
+            <div class="label mb-8">Inspiration — choose one or craft your own:</div>
+            <div id="affirmation-examples" style="display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Goals & Action Plan</div>
+          <div class="field">
+            <label for="plan-actions">What actions must you put in place?</label>
+            <textarea id="plan-actions" rows="5" placeholder="Break down your goals into actionable steps..."></textarea>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">30-Day Gremlins</div>
+          <p style="font-size:0.85rem;margin-bottom:12px;">What obstacles might pop up? How can you prepare to fight them ahead of time?</p>
+          <div class="field">
+            <textarea id="plan-gremlins" rows="3" placeholder="Tech gremlins, family emergencies, procrastination..."></textarea>
+          </div>
+        </div>
+
+        <div class="card" style="background:rgba(124,58,237,0.08);border-color:rgba(124,58,237,0.25);">
+          <div style="font-size:0.85rem;color:var(--text-muted);">
+            <strong style="color:var(--text);">Remember:</strong><br>
+            Nothing EVER only takes 15 minutes. Give yourself time.<br><br>
+            Plan activities when you're most creative vs. on autopilot.<br><br>
+            Delegate whenever possible.<br><br>
+            Read your 30-Day Affirmation every day.
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-full" onclick="savePlanning()">Save Plan ✓</button>
+      </div>
+      <div style="height:24px;"></div>
+    </div>
+  </div>
+
+  <!-- ── PEOPLING VIEW ──────────────────────────────────── -->
+  <div id="view-peopling" class="view">
+    <div class="container">
+      <div class="page-header">
+        <div class="eyebrow">Connections</div>
+        <h2>Peopling</h2>
+        <p style="margin-top:4px;font-size:0.85rem;">30+ people who can help you build and promote your business this month. Call 1–2 per day.</p>
+      </div>
+
+      <div class="card mb-8">
+        <div class="contact-grid" id="contacts-list"></div>
+        <button class="add-row-btn mt-16" onclick="addContact()">+ Add Contact</button>
+      </div>
+
+      <button class="btn btn-primary btn-full" onclick="saveContacts()">Save Contacts ✓</button>
+      <div style="height:24px;"></div>
+    </div>
+  </div>
+
+  <!-- ── WEEKLY VIEW ────────────────────────────────────── -->
+  <div id="view-weekly" class="view">
+    <div class="container">
+      <div class="page-header">
+        <div class="eyebrow">Weekly Planning</div>
+        <h2>Week <span id="weekly-title-num">1</span></h2>
+        <div class="muted" id="weekly-dates-label"></div>
+      </div>
+
+      <div class="week-tabs" id="week-tabs">
+        <button class="week-tab active" onclick="switchWeek(1)">Week 1</button>
+        <button class="week-tab" onclick="switchWeek(2)">Week 2</button>
+        <button class="week-tab" onclick="switchWeek(3)">Week 3</button>
+        <button class="week-tab" onclick="switchWeek(4)">Week 4</button>
+      </div>
+
+      <div class="stack">
+        <div class="card">
+          <div class="card-title">Weekly Schedule & Goals</div>
+          <p style="font-size:0.825rem;margin-bottom:14px;color:var(--text-muted);">What's scheduled? What still needs scheduling? Write the day, goal, and tasks needed.</p>
+          <div class="goal-rows" id="weekly-goals-rows"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Surprise Opportunities</div>
+          <p style="font-size:0.825rem;margin-bottom:14px;color:var(--text-muted);">New tasks or opportunities that showed up this week.</p>
+          <div class="opp-rows" id="weekly-opp-rows"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Weekly Financials</div>
+          <div class="stack">
+            <div class="row">
+              <div class="field col">
+                <label for="wk-exp-income">Expected Income</label>
+                <input type="text" id="wk-exp-income" placeholder="$">
+              </div>
+              <div class="field col">
+                <label for="wk-unexp-income">Unexpected Income</label>
+                <input type="text" id="wk-unexp-income" placeholder="$">
+              </div>
+            </div>
+            <div class="row">
+              <div class="field col">
+                <label for="wk-exp-exp">Expected Expenses</label>
+                <input type="text" id="wk-exp-exp" placeholder="$">
+              </div>
+              <div class="field col">
+                <label for="wk-unexp-exp">Unexpected Expenses</label>
+                <input type="text" id="wk-unexp-exp" placeholder="$">
+              </div>
+            </div>
+            <div class="field">
+              <label for="wk-unexp-good">Unexpected Good (non-monetary)</label>
+              <input type="text" id="wk-unexp-good" placeholder="Something wonderful that showed up...">
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Notes</div>
+          <textarea id="wk-notes" rows="4" placeholder="Reflections, observations, anything else..."></textarea>
+        </div>
+
+        <button class="btn btn-primary btn-full" onclick="saveWeekly()">Save Week ✓</button>
+      </div>
+      <div style="height:24px;"></div>
+    </div>
+  </div>
+
+  <!-- ── DAILY VIEW ─────────────────────────────────────── -->
+  <div id="view-daily" class="view">
+    <div class="container">
+      <div class="page-header" style="padding-bottom:8px;">
+        <div class="eyebrow">Daily Journal</div>
+        <div class="between">
+          <h2>Day <span id="daily-day-num">1</span></h2>
+          <div class="muted" id="daily-date-label"></div>
+        </div>
+      </div>
+
+      <!-- Day Strip -->
+      <div style="padding:0 16px 16px;">
+        <div class="day-strip">
+          <div class="day-strip-inner" id="day-strip-inner"></div>
+        </div>
+      </div>
+
+      <div class="stack">
+        <!-- Affirmation reminder -->
+        <div id="daily-affirmation-wrap" class="mantra-banner hidden">
+          <div class="label mb-8" style="text-align:center;">Today's Affirmation</div>
+          <div class="mantra-text" id="daily-affirmation-text"></div>
+        </div>
+
+        <!-- Push Back Task -->
+        <div class="card card-gold">
+          <div class="card-title">⚡ Push Back Task — Do This First!</div>
+          <div class="row" style="align-items:center;gap:12px;">
+            <input type="text" id="daily-pushback" placeholder="Your most challenging task today..." style="flex:1;">
+            <button class="check-done" id="pb-done-btn" onclick="togglePushback()" title="Mark complete" style="width:44px;height:44px;background:var(--bg-base);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:1.2rem;flex-shrink:0;transition:all var(--transition);">☐</button>
+          </div>
+        </div>
+
+        <!-- Schedule & Goals -->
+        <div class="card">
+          <div class="card-title">Today's Schedule & Goals</div>
+          <div class="goal-rows" id="daily-goals-rows"></div>
+        </div>
+
+        <!-- Activity Sections -->
+        <div class="card">
+          <div class="card-title">📈 Revenue Building Activities</div>
+          <textarea id="daily-revenue" rows="3" placeholder="What activities did you do today to build revenue?"></textarea>
+        </div>
+        <div class="card">
+          <div class="card-title">👤 Client Tasks</div>
+          <textarea id="daily-client" rows="3" placeholder="Deliverables, follow-ups, and commitments to current clients..."></textarea>
+        </div>
+        <div class="card">
+          <div class="card-title">🏗 Business Building Tasks</div>
+          <textarea id="daily-biz" rows="3" placeholder="Systems, content creation, product development, branding..."></textarea>
+        </div>
+        <div class="card">
+          <div class="card-title">🤝 Networking & Peopling</div>
+          <textarea id="daily-network" rows="2" placeholder="Who did you reach out to today?"></textarea>
+        </div>
+        <div class="card">
+          <div class="card-title">📝 Notes</div>
+          <textarea id="daily-notes" rows="2" placeholder="Anything else worth capturing..."></textarea>
+        </div>
+
+        <!-- Wellness Scores -->
+        <div class="card">
+          <div class="card-title">Mind · Body · Spirit Scores</div>
+          <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:16px;">Track the ebbs and flows. Don't beat yourself up!</p>
+          <div class="stack gap-16" id="wellness-scores">
+            <div>
+              <div class="between mb-8"><label>Food</label><span class="muted" id="food-score-val">—</span></div>
+              <div class="score-row" id="food-score-row"></div>
+              <input type="text" id="food-notes" class="mt-8" placeholder="Notes...">
+            </div>
+            <div>
+              <div class="between mb-8"><label>Exercise</label><span class="muted" id="exercise-score-val">—</span></div>
+              <div class="score-row" id="exercise-score-row"></div>
+              <input type="text" id="exercise-notes" class="mt-8" placeholder="Notes...">
+            </div>
+            <div>
+              <div class="between mb-8"><label>Journal</label><span class="muted" id="journal-score-val">—</span></div>
+              <div class="score-row" id="journal-score-row"></div>
+              <input type="text" id="journal-notes" class="mt-8" placeholder="Notes...">
+            </div>
+            <div>
+              <div class="between mb-8"><label>Meditation</label><span class="muted" id="meditation-score-val">—</span></div>
+              <div class="score-row" id="meditation-score-row"></div>
+              <input type="text" id="meditation-notes" class="mt-8" placeholder="Notes...">
+            </div>
+          </div>
+        </div>
+
+        <!-- Financials -->
+        <div class="card">
+          <div class="card-title">Daily Financials</div>
+          <div class="stack">
+            <div class="row">
+              <div class="field col">
+                <label for="d-exp-income">Expected Income</label>
+                <input type="text" id="d-exp-income" placeholder="$">
+              </div>
+              <div class="field col">
+                <label for="d-unexp-income">Unexpected Income</label>
+                <input type="text" id="d-unexp-income" placeholder="$">
+              </div>
+            </div>
+            <div class="row">
+              <div class="field col">
+                <label for="d-exp-exp">Expected Expenses</label>
+                <input type="text" id="d-exp-exp" placeholder="$">
+              </div>
+              <div class="field col">
+                <label for="d-unexp-exp">Unexpected Expenses</label>
+                <input type="text" id="d-unexp-exp" placeholder="$">
+              </div>
+            </div>
+            <div class="field">
+              <label for="d-unexp-good">Unexpected Good (non-monetary)</label>
+              <input type="text" id="d-unexp-good" placeholder="Something wonderful that showed up...">
+            </div>
+          </div>
+        </div>
+
+        <!-- Reflections -->
+        <div class="card card-gold">
+          <div class="card-title">End-of-Day Reflections</div>
+          <div class="stack">
+            <div class="field">
+              <label for="daily-rocked">🌟 Where did I rock it today?</label>
+              <textarea id="daily-rocked" rows="3" placeholder="Successes, wins, moments to celebrate..."></textarea>
+            </div>
+            <div class="field">
+              <label for="daily-improve">🔧 Where can I do more work?</label>
+              <textarea id="daily-improve" rows="3" placeholder="Areas for growth, things to work on..."></textarea>
+            </div>
+            <div class="field">
+              <label for="daily-gratitude">🙏 What am I grateful for?</label>
+              <textarea id="daily-gratitude" rows="3" placeholder="Three things, big or small..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Free Journal Entry -->
+        <div class="card">
+          <div class="card-title">📖 Journal Pages — Take 5–10 Minutes to Just Write</div>
+          <textarea id="daily-free-journal" rows="8" placeholder="Stream of consciousness. No editing. Just write..."></textarea>
+
+          <!-- Photo Upload -->
+          <div class="section-divider"><div class="line"></div><div class="text">Or Upload Handwritten Pages</div><div class="line"></div></div>
+          <div class="photo-zone" onclick="document.getElementById('photo-upload').click()">
+            <input type="file" id="photo-upload" accept="image/*" capture="environment" multiple onchange="handlePhotoUpload(event)">
+            <div class="photo-icon">📷</div>
+            <p>Tap to take a photo or choose images<br><span style="font-size:0.75rem;color:var(--text-dim);">Camera or photo library — handwriting will be transcribed</span></p>
+          </div>
+          <div class="photo-thumbs" id="photo-thumbs"></div>
+          <div id="ocr-section" class="hidden mt-16">
+            <button class="btn btn-secondary btn-full" id="transcribe-btn" onclick="transcribePhotos()">
+              <span>✨ Transcribe Handwritten Pages</span>
+            </button>
+            <div id="ocr-result" class="hidden ocr-result mt-16"></div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-full" onclick="saveDaily()">Save Day ✓</button>
+      </div>
+      <div style="height:24px;"></div>
+    </div>
+  </div>
+
+  <!-- ── AI REVIEW VIEW ─────────────────────────────────── -->
+  <div id="view-review" class="view">
+    <div class="container">
+      <div class="page-header">
+        <div class="eyebrow">AI Analysis</div>
+        <h2>Journal Review</h2>
+        <p style="margin-top:4px;font-size:0.85rem;">Claude analyzes all your entries and surfaces what matters most.</p>
+      </div>
+
+      <div id="review-no-key" class="card hidden" style="text-align:center;padding:32px 24px;">
+        <div style="font-size:2.5rem;margin-bottom:16px;">🔑</div>
+        <h3 style="margin-bottom:8px;">Anthropic API Key Required</h3>
+        <p style="margin-bottom:20px;">The AI Review uses Claude to analyze your journal. Add your API key in Settings.</p>
+        <button class="btn btn-primary" onclick="navigate('settings')">Go to Settings</button>
+      </div>
+
+      <div id="review-no-entries" class="card hidden" style="text-align:center;padding:32px 24px;">
+        <div style="font-size:2.5rem;margin-bottom:16px;">📖</div>
+        <h3 style="margin-bottom:8px;">No Journal Entries Yet</h3>
+        <p style="margin-bottom:20px;">Complete at least a few daily entries before running your review.</p>
+        <button class="btn btn-primary" onclick="navigate('daily')">Start Journaling</button>
+      </div>
+
+      <div id="review-ready" class="hidden">
+        <button class="btn btn-primary btn-full mb-8" onclick="runReview()">
+          ✨ Analyze My Journal
+        </button>
+        <p class="muted" style="text-align:center;font-size:0.8rem;margin-bottom:20px;">Analyzes your 30-day plan + all daily entries</p>
+      </div>
+
+      <div id="review-loading" class="loading-spinner hidden">
+        <div class="spinner"></div>
+        <span>Claude is reading your journal...</span>
+      </div>
+
+      <div id="review-results" class="hidden stack">
+        <!-- Results injected here by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MANTRAS VIEW ───────────────────────────────────── -->
+  <div id="view-mantras" class="view">
+    <div class="container">
+      <div class="page-header">
+        <div class="eyebrow">The Legacy Code</div>
+        <h2>10 Mantras</h2>
+        <p style="margin-top:4px;font-size:0.85rem;">Speak these daily. Out loud. Without hesitation.</p>
+      </div>
+      <div class="mantra-list" id="mantra-list"></div>
+      <div style="height:24px;"></div>
+    </div>
+  </div>
+
+  <!-- ── SETTINGS VIEW ─────────────────────────────────── -->
+  <div id="view-settings" class="view">
+    <div class="container">
+      <div class="page-header">
+        <div class="eyebrow">Account</div>
+        <h2>Settings</h2>
+      </div>
+
+      <div class="settings-section">
+        <h3>Profile</h3>
+        <div class="stack">
+          <div class="field">
+            <label for="settings-name">Display Name</label>
+            <input type="text" id="settings-name" placeholder="Your name">
+          </div>
+          <div class="field">
+            <label>Email</label>
+            <input type="email" id="settings-email" disabled style="opacity:0.5;">
+          </div>
+          <button class="btn btn-secondary" onclick="saveProfile()">Save Profile</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>AI Features (Claude)</h3>
+        <p style="font-size:0.85rem;margin-bottom:16px;">Your Anthropic API key is used for handwriting transcription and journal review. It's stored only in your browser.</p>
+        <div class="field">
+          <label for="settings-apikey">Anthropic API Key</label>
+          <div class="api-key-field">
+            <input type="password" id="settings-apikey" placeholder="sk-ant-...">
+            <button class="toggle-visibility" onclick="toggleApiKeyVisibility()">👁</button>
+          </div>
+        </div>
+        <button class="btn btn-secondary mt-16" onclick="saveApiKey()">Save API Key</button>
+        <p class="muted mt-8" style="font-size:0.75rem;">Don't have an API key? <a href="https://console.anthropic.com" target="_blank" style="color:var(--gold);">Get one at console.anthropic.com →</a></p>
+      </div>
+
+      <div class="settings-section">
+        <h3>New 30-Day Cycle</h3>
+        <p style="font-size:0.85rem;margin-bottom:16px;">Start a fresh cycle. Your existing entries are preserved.</p>
+        <button class="btn btn-secondary" onclick="newCycle()">Start New Cycle</button>
+      </div>
+
+      <div class="settings-section">
+        <h3>Account</h3>
+        <button class="btn btn-danger" onclick="signOut()">Sign Out</button>
+      </div>
+
+      <div style="height:24px;"></div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav" id="bottom-nav">
+    <button class="nav-item active" data-view="dashboard" onclick="navigate('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </button>
+    <button class="nav-item" data-view="planning" onclick="navigate('planning')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Plan
+    </button>
+    <button class="nav-item" data-view="daily" onclick="navigate('daily')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      Daily
+    </button>
+    <button class="nav-item" data-view="review" onclick="navigate('review')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Review
+    </button>
+    <button class="nav-item" data-view="weekly" onclick="navigate('weekly')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Weekly
+    </button>
+  </nav>
+
+</div><!-- /app-shell -->
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- App Script -->
+<script src="app.js"></script>
+<!-- Service Worker Registration -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>
