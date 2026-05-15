@@ -782,6 +782,21 @@
       <button class="btn btn-primary btn-full" onclick="signIn()">Sign In</button>
     </div>
 
+    <!-- Set New Password Panel (shown after clicking reset link in email) -->
+    <div id="auth-reset" class="stack hidden">
+      <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:4px;">Choose a new password for your account.</p>
+      <div class="field">
+        <label for="reset-pass">New Password</label>
+        <input type="password" id="reset-pass" placeholder="At least 8 characters" autocomplete="new-password">
+      </div>
+      <div class="field">
+        <label for="reset-pass2">Confirm Password</label>
+        <input type="password" id="reset-pass2" placeholder="Repeat your new password" autocomplete="new-password">
+      </div>
+      <div id="reset-msg" class="hidden" style="padding:10px 14px;border-radius:8px;font-size:0.9rem;"></div>
+      <button class="btn btn-primary btn-full" onclick="updatePassword()">Set New Password</button>
+    </div>
+
     <!-- Forgot Password Panel -->
     <div id="auth-forgot" class="stack hidden">
       <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:4px;">Enter your email and we'll send you a reset link.</p>

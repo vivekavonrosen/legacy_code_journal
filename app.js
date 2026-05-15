@@ -76,7 +76,26 @@ async function boot() {
     return;
   }
 
-  // Check session
+  // Listen for auth changes FIRST — catches PASSWORD_RECOVERY before getSession
+  state.supabase.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      // User clicked reset link in email — show the set-new-password form
+      showView('auth');
+      showPasswordResetForm();
+      return;
+    }
+    if (event === 'SIGNED_IN' && session && !state.user) await onSignedIn(session.user);
+    if (event === 'SIGNED_OUT') { state.user = null; showView('auth'); }
+  });
+
+  // Check for recovery token in URL hash (handles direct page load from reset link)
+  if (window.location.hash.includes('type=recovery')) {
+    showView('auth');
+    showPasswordResetForm();
+    return;
+  }
+
+  // Check existing session
   const { data: { session } } = await state.supabase.auth.getSession();
   if (!session) {
     showView('auth');
@@ -84,12 +103,6 @@ async function boot() {
   }
 
   await onSignedIn(session.user);
-
-  // Listen for auth changes
-  state.supabase.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN' && session) await onSignedIn(session.user);
-    if (event === 'SIGNED_OUT') { state.user = null; showView('auth'); }
-  });
 }
 
 async function onSignedIn(user) {
@@ -179,6 +192,62 @@ async function signUp() {
   err.style.background = 'rgba(16,185,129,0.15)';
   err.style.borderColor = 'rgba(16,185,129,0.3)';
   err.style.color = '#6ee7b7';
+}
+
+function showPasswordResetForm() {
+  // Hide all auth panels, show only the reset form
+  const panels = ['auth-login', 'auth-signup', 'auth-forgot'];
+  panels.forEach(id => document.getElementById(id).classList.add('hidden'));
+  document.getElementById('auth-reset').classList.remove('hidden');
+  // Hide the tabs — not relevant during reset
+  document.querySelector('.auth-tabs').style.display = 'none';
+  document.getElementById('auth-hero') && (document.getElementById('auth-hero').querySelector('p').textContent = 'Set your new password below.');
+}
+
+async function updatePassword() {
+  const pass  = document.getElementById('reset-pass').value;
+  const pass2 = document.getElementById('reset-pass2').value;
+  const msgEl = document.getElementById('reset-msg');
+  msgEl.classList.add('hidden');
+
+  if (!pass || pass.length < 8) {
+    msgEl.textContent = 'Password must be at least 8 characters.';
+    msgEl.style.background = 'rgba(239,68,68,0.15)';
+    msgEl.style.color = '#fca5a5';
+    msgEl.style.border = '1px solid rgba(239,68,68,0.3)';
+    msgEl.classList.remove('hidden');
+    return;
+  }
+  if (pass !== pass2) {
+    msgEl.textContent = 'Passwords do not match.';
+    msgEl.style.background = 'rgba(239,68,68,0.15)';
+    msgEl.style.color = '#fca5a5';
+    msgEl.style.border = '1px solid rgba(239,68,68,0.3)';
+    msgEl.classList.remove('hidden');
+    return;
+  }
+
+  const { error } = await state.supabase.auth.updateUser({ password: pass });
+  if (error) {
+    msgEl.textContent = error.message;
+    msgEl.style.background = 'rgba(239,68,68,0.15)';
+    msgEl.style.color = '#fca5a5';
+    msgEl.style.border = '1px solid rgba(239,68,68,0.3)';
+    msgEl.classList.remove('hidden');
+    return;
+  }
+
+  // Success — sign them in and clear the hash
+  msgEl.textContent = '✓ Password updated! Taking you in…';
+  msgEl.style.background = 'rgba(16,185,129,0.15)';
+  msgEl.style.color = '#6ee7b7';
+  msgEl.style.border = '1px solid rgba(16,185,129,0.3)';
+  msgEl.classList.remove('hidden');
+  window.history.replaceState(null, '', window.location.pathname);
+  setTimeout(async () => {
+    const { data: { session } } = await state.supabase.auth.getSession();
+    if (session) await onSignedIn(session.user);
+  }, 1200);
 }
 
 function showForgotPassword(show = true) {
