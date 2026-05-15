@@ -242,7 +242,7 @@
       font-weight: 700; font-size: 1rem; color: var(--gold);
       text-decoration: none; cursor: pointer;
     }
-    .header-logo svg { width: 28px; height: 28px; flex-shrink: 0; }
+    .header-logo img { width: 28px; height: 28px; flex-shrink: 0; object-fit: contain; }
     .header-actions { display: flex; gap: 8px; align-items: center; }
     .header-back {
       background: none; border: none; color: var(--text-muted);
@@ -714,14 +714,7 @@
   <div style="min-height:100vh;background:radial-gradient(ellipse at top,#1a2068 0%,#070b26 60%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;">
     <div style="max-width:420px;width:100%;text-align:center;">
       <div style="margin-bottom:24px;">
-        <!-- Phoenix SVG logo -->
-        <svg viewBox="0 0 80 80" style="width:72px;height:72px;margin:0 auto;" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="40" cy="40" r="38" fill="rgba(240,180,41,0.1)" stroke="rgba(240,180,41,0.3)" stroke-width="1.5"/>
-          <path d="M40 16C33 22 26 32 28 42C30 50 36 55 40 64C44 55 50 50 52 42C54 32 47 22 40 16Z" fill="#f0b429" opacity="0.8"/>
-          <path d="M40 24C36 29 32 36 34 43C36 48 38 52 40 57C42 52 44 48 46 43C48 36 44 29 40 24Z" fill="#fcd34d"/>
-          <path d="M28 35C22 32 18 38 20 44C22 50 30 52 34 47C30 46 26 42 28 35Z" fill="#7c3aed" opacity="0.7"/>
-          <path d="M52 35C58 32 62 38 60 44C58 50 50 52 46 47C50 46 54 42 52 35Z" fill="#7c3aed" opacity="0.7"/>
-        </svg>
+        <img src="logo-color.png" alt="Legacy Code Journal" style="width:72px;height:72px;object-fit:contain;margin:0 auto;display:block;">
       </div>
       <h1 style="font-size:1.8rem;margin-bottom:8px;">The <span class="gold">Legacy Code</span></h1>
       <p style="margin-bottom:32px;font-size:0.9rem;">Connect your Supabase project to get started.</p>
@@ -753,13 +746,7 @@
 ════════════════════════════════════════════════════════════ -->
 <div id="view-auth" class="view">
   <div class="auth-hero">
-    <svg class="bird-logo" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="40" cy="40" r="38" fill="rgba(240,180,41,0.1)" stroke="rgba(240,180,41,0.3)" stroke-width="1.5"/>
-      <path d="M40 16C33 22 26 32 28 42C30 50 36 55 40 64C44 55 50 50 52 42C54 32 47 22 40 16Z" fill="#f0b429" opacity="0.8"/>
-      <path d="M40 24C36 29 32 36 34 43C36 48 38 52 40 57C42 52 44 48 46 43C48 36 44 29 40 24Z" fill="#fcd34d"/>
-      <path d="M28 35C22 32 18 38 20 44C22 50 30 52 34 47C30 46 26 42 28 35Z" fill="#7c3aed" opacity="0.7"/>
-      <path d="M52 35C58 32 62 38 60 44C58 50 50 52 46 47C50 46 54 42 52 35Z" fill="#7c3aed" opacity="0.7"/>
-    </svg>
+    <img class="bird-logo" src="logo-color.png" alt="Legacy Code Journal">
     <h1>The <span>Legacy Code</span></h1>
     <p class="muted">Your 30-day journey to legacy begins here.</p>
   </div>
@@ -808,11 +795,7 @@
     <div class="header-inner">
       <button class="header-back" id="header-back" onclick="goBack()">←</button>
       <div class="header-logo" onclick="navigate('dashboard')">
-        <svg viewBox="0 0 40 40" fill="none">
-          <path d="M20 6C16 10 12 16 13 22C14 26 17 29 20 34C23 29 26 26 27 22C28 16 24 10 20 6Z" fill="#f0b429"/>
-          <path d="M13 18C10 16 8 20 9 23C10 26 14 27 16 24C14 24 12 22 13 18Z" fill="#7c3aed"/>
-          <path d="M27 18C30 16 32 20 31 23C30 26 26 27 24 24C26 24 28 22 27 18Z" fill="#7c3aed"/>
-        </svg>
+        <img src="logo-color.png" alt="Legacy Code" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;">
         <span>Legacy Code</span>
       </div>
       <div class="header-actions">
