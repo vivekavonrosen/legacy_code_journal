@@ -30,8 +30,8 @@
       --purple:     #7c3aed;
       --purple-lt:  #a78bfa;
       --text:       #eef1ff;
-      --text-muted: #8892c8;
-      --text-dim:   #4a5490;
+      --text-muted: #b0b8de;  /* was #8892c8 — boosted for WCAG AA */
+      --text-dim:   #7b85c2;  /* was #4a5490 — failed contrast, now 5.6:1 */
       --border:     #2a306e;
       --success:    #10b981;
       --danger:     #ef4444;
@@ -45,17 +45,26 @@
       --safe-right:  env(safe-area-inset-right, 0px);
     }
 
-    html { height: 100%; -webkit-tap-highlight-color: transparent; }
+    html { height: 100%; -webkit-tap-highlight-color: transparent; font-size: 16px; }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: var(--bg-deep);
       color: var(--text);
       min-height: 100%;
-      line-height: 1.6;
+      font-size: 1rem;
+      line-height: 1.7;
       padding-bottom: calc(60px + var(--safe-bottom));
       overflow-x: hidden;
     }
+
+    /* ── Focus styles (WCAG 2.1 §1.4.11 / §2.4.7) ───────────── */
+    :focus-visible {
+      outline: 3px solid var(--gold);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+    button:focus-visible, a:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 
     /* ── Scrollbar ──────────────────────────────────────────── */
     ::-webkit-scrollbar { width: 6px; }
@@ -63,14 +72,14 @@
     ::-webkit-scrollbar-thumb { background: var(--bg-lift); border-radius: 3px; }
 
     /* ── Typography ─────────────────────────────────────────── */
-    h1 { font-size: clamp(1.5rem, 4vw, 2.2rem); font-weight: 700; line-height: 1.2; }
-    h2 { font-size: clamp(1.2rem, 3vw, 1.6rem); font-weight: 600; }
-    h3 { font-size: 1.1rem; font-weight: 600; }
-    p  { color: var(--text-muted); line-height: 1.7; }
+    h1 { font-size: clamp(1.6rem, 4vw, 2.2rem); font-weight: 700; line-height: 1.2; }
+    h2 { font-size: clamp(1.25rem, 3vw, 1.6rem); font-weight: 600; }
+    h3 { font-size: 1.15rem; font-weight: 600; }
+    p  { color: var(--text-muted); line-height: 1.8; }
 
     .gold { color: var(--gold); }
-    .muted { color: var(--text-muted); font-size: 0.875rem; }
-    .label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+    .muted { color: var(--text-muted); font-size: 0.9rem; }
+    .label { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
 
     /* ── Layout Utilities ───────────────────────────────────── */
     .view { display: none; min-height: 100vh; }
@@ -101,7 +110,7 @@
       background: linear-gradient(135deg, var(--bg-card) 0%, #1e1a0a 100%);
     }
     .card-title {
-      font-size: 0.7rem;
+      font-size: 0.8rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.12em;
@@ -161,7 +170,7 @@
 
     /* ── Form Elements ──────────────────────────────────────── */
     .field { display: flex; flex-direction: column; gap: 6px; }
-    label { font-size: 0.85rem; font-weight: 500; color: var(--text-muted); }
+    label { font-size: 0.9rem; font-weight: 600; color: var(--text); }
     label.req::after { content: ' *'; color: var(--gold); }
 
     input[type="text"],
@@ -177,19 +186,20 @@
       border-radius: var(--radius-sm);
       color: var(--text);
       font-family: inherit;
-      font-size: 0.95rem;
-      padding: 11px 14px;
+      font-size: 1rem;
+      padding: 12px 14px;
       transition: border-color var(--transition);
       -webkit-appearance: none;
       appearance: none;
     }
     input:focus, select:focus, textarea:focus {
-      outline: none;
+      outline: 3px solid var(--gold);
+      outline-offset: 1px;
       border-color: var(--gold);
-      box-shadow: 0 0 0 3px rgba(240,180,41,0.12);
+      box-shadow: 0 0 0 3px rgba(240,180,41,0.15);
     }
-    input::placeholder, textarea::placeholder { color: var(--text-dim); }
-    textarea { resize: vertical; min-height: 90px; }
+    input::placeholder, textarea::placeholder { color: var(--text-dim); font-size: 0.95rem; }
+    textarea { resize: vertical; min-height: 100px; line-height: 1.7; }
 
     select option { background: var(--bg-base); }
 
@@ -197,12 +207,12 @@
       display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
     }
     .score-btn {
-      width: 34px; height: 34px;
+      width: 44px; height: 44px;   /* WCAG 2.5.5 minimum 44×44px touch target */
       background: var(--bg-base);
       border: 1px solid var(--border);
       border-radius: 6px;
       color: var(--text-muted);
-      font-size: 0.8rem;
+      font-size: 0.9rem;
       font-weight: 600;
       cursor: pointer;
       transition: all var(--transition);
@@ -266,9 +276,10 @@
       padding: 10px 4px; gap: 4px;
       background: none; border: none; cursor: pointer;
       color: var(--text-dim);
-      font-size: 0.65rem; font-weight: 500;
+      font-size: 0.75rem; font-weight: 600;   /* was 0.65rem — too small */
       text-transform: uppercase; letter-spacing: 0.05em;
       transition: color var(--transition);
+      min-height: 44px;   /* touch target */
     }
     .nav-item.active { color: var(--gold); }
     .nav-item svg { width: 22px; height: 22px; }
@@ -279,7 +290,7 @@
       max-width: 720px; margin: 0 auto;
     }
     .page-header .eyebrow {
-      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+      font-size: 0.8rem; font-weight: 700; text-transform: uppercase;
       letter-spacing: 0.12em; color: var(--gold); margin-bottom: 6px;
     }
 
@@ -370,7 +381,7 @@
       text-align: center;
     }
     .stat-card .stat-num { font-size: 1.6rem; font-weight: 700; color: var(--gold); line-height: 1; }
-    .stat-card .stat-lbl { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; }
+    .stat-card .stat-lbl { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; }
     .quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .quick-card {
       background: var(--bg-card);
@@ -384,7 +395,7 @@
     .quick-card:hover { border-color: var(--gold-dim); transform: translateY(-1px); }
     .quick-card .qc-icon { font-size: 1.4rem; }
     .quick-card .qc-label { font-size: 0.9rem; font-weight: 600; }
-    .quick-card .qc-sub { font-size: 0.75rem; color: var(--text-muted); }
+    .quick-card .qc-sub { font-size: 0.8rem; color: var(--text-muted); }
     .affirmation-card {
       background: linear-gradient(135deg, rgba(124,58,237,0.15) 0%, var(--bg-card) 100%);
       border: 1px solid rgba(124,58,237,0.3);
@@ -762,10 +773,25 @@
         <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email">
       </div>
       <div class="field">
-        <label for="login-pass">Password</label>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <label for="login-pass">Password</label>
+          <button type="button" onclick="showForgotPassword()" style="background:none;border:none;color:var(--gold);font-size:0.85rem;cursor:pointer;padding:0;">Forgot password?</button>
+        </div>
         <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
       </div>
       <button class="btn btn-primary btn-full" onclick="signIn()">Sign In</button>
+    </div>
+
+    <!-- Forgot Password Panel -->
+    <div id="auth-forgot" class="stack hidden">
+      <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:4px;">Enter your email and we'll send you a reset link.</p>
+      <div class="field">
+        <label for="forgot-email">Email</label>
+        <input type="email" id="forgot-email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div id="forgot-msg" class="hidden" style="padding:10px 14px;border-radius:8px;font-size:0.9rem;"></div>
+      <button class="btn btn-primary btn-full" onclick="sendPasswordReset()">Send Reset Link</button>
+      <button type="button" onclick="showForgotPassword(false)" style="background:none;border:none;color:var(--text-muted);font-size:0.9rem;cursor:pointer;text-align:center;padding:4px;">← Back to Sign In</button>
     </div>
     <div id="auth-signup" class="stack hidden">
       <div class="field">

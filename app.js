@@ -181,6 +181,57 @@ async function signUp() {
   err.style.color = '#6ee7b7';
 }
 
+function showForgotPassword(show = true) {
+  const loginForm   = document.getElementById('auth-login');
+  const forgotForm  = document.getElementById('auth-forgot');
+  const errorEl     = document.getElementById('auth-error');
+  const forgotMsg   = document.getElementById('forgot-msg');
+  hideEl(errorEl);
+  hideEl(forgotMsg);
+  if (show) {
+    hideEl(loginForm);
+    showEl(forgotForm);
+    // Pre-fill email if already typed
+    const email = document.getElementById('login-email').value.trim();
+    if (email) document.getElementById('forgot-email').value = email;
+  } else {
+    showEl(loginForm);
+    hideEl(forgotForm);
+  }
+}
+
+async function sendPasswordReset() {
+  const email   = document.getElementById('forgot-email').value.trim();
+  const msgEl   = document.getElementById('forgot-msg');
+  msgEl.classList.add('hidden');
+
+  if (!email) {
+    msgEl.textContent = 'Please enter your email address.';
+    msgEl.style.background = 'rgba(239,68,68,0.15)';
+    msgEl.style.color = '#fca5a5';
+    msgEl.style.border = '1px solid rgba(239,68,68,0.3)';
+    msgEl.classList.remove('hidden');
+    return;
+  }
+
+  const { error } = await state.supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + '/#reset-password'
+  });
+
+  if (error) {
+    msgEl.textContent = error.message;
+    msgEl.style.background = 'rgba(239,68,68,0.15)';
+    msgEl.style.color = '#fca5a5';
+    msgEl.style.border = '1px solid rgba(239,68,68,0.3)';
+  } else {
+    msgEl.textContent = '✓ Reset link sent! Check your email inbox.';
+    msgEl.style.background = 'rgba(16,185,129,0.15)';
+    msgEl.style.color = '#6ee7b7';
+    msgEl.style.border = '1px solid rgba(16,185,129,0.3)';
+  }
+  msgEl.classList.remove('hidden');
+}
+
 async function signOut() {
   await state.supabase.auth.signOut();
   state.user = null; state.journal = null;
