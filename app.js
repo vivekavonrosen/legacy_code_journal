@@ -96,6 +96,18 @@ async function boot() {
     return;
   }
 
+  // Show success message if coming back from a password reset
+  if (localStorage.getItem('pw_reset_success')) {
+    localStorage.removeItem('pw_reset_success');
+    showView('auth');
+    const err = document.getElementById('auth-error');
+    err.textContent = '✓ Password updated! Sign in with your new password.';
+    err.style.background = 'rgba(16,185,129,0.15)';
+    err.style.borderColor = 'rgba(16,185,129,0.3)';
+    err.style.color = '#6ee7b7';
+    err.classList.remove('hidden');
+  }
+
   // Check existing session
   const { data: { session } } = await state.supabase.auth.getSession();
   if (!session) {
@@ -238,25 +250,16 @@ async function updatePassword() {
     return;
   }
 
-  // Success — send them to sign-in with a pre-filled success message
-  msgEl.textContent = '✓ Password updated! Please sign in with your new password.';
+  // Success — store a flag and reload cleanly to the sign-in page
+  msgEl.textContent = '✓ Password updated! Taking you to sign in…';
   msgEl.style.background = 'rgba(16,185,129,0.15)';
   msgEl.style.color = '#6ee7b7';
   msgEl.style.border = '1px solid rgba(16,185,129,0.3)';
   msgEl.classList.remove('hidden');
-  window.history.replaceState(null, '', window.location.pathname);
   await state.supabase.auth.signOut();
+  localStorage.setItem('pw_reset_success', '1');
   setTimeout(() => {
-    // Show login tab and carry over a success notice
-    document.getElementById('auth-reset').classList.add('hidden');
-    document.querySelector('.auth-tabs').style.display = '';
-    switchAuthTab('login');
-    const err = document.getElementById('auth-error');
-    err.textContent = '✓ Password updated! Sign in with your new password.';
-    err.style.background = 'rgba(16,185,129,0.15)';
-    err.style.borderColor = 'rgba(16,185,129,0.3)';
-    err.style.color = '#6ee7b7';
-    err.classList.remove('hidden');
+    window.location.href = window.location.origin;
   }, 1500);
 }
 
