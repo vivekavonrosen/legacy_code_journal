@@ -79,7 +79,8 @@ async function boot() {
   // Listen for auth changes FIRST — catches PASSWORD_RECOVERY before getSession
   state.supabase.auth.onAuthStateChange(async (event, session) => {
     if (event === 'PASSWORD_RECOVERY') {
-      // User clicked reset link in email — show the set-new-password form
+      // Store the recovery session so updateUser() works
+      state.recoverySession = session;
       showView('auth');
       showPasswordResetForm();
       return;
@@ -284,7 +285,7 @@ async function sendPasswordReset() {
   }
 
   const { error } = await state.supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin + '/#reset-password'
+    redirectTo: window.location.origin   // Supabase appends #access_token=...&type=recovery
   });
 
   if (error) {
