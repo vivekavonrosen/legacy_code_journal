@@ -119,30 +119,31 @@ async function boot() {
 }
 
 async function onSignedIn(user) {
-  state.user = user;
-  document.getElementById('app-shell').classList.remove('hidden');
-  document.getElementById('view-auth').classList.remove('active');
+  try {
+    state.user = user;
+    document.getElementById('app-shell').classList.remove('hidden');
+    document.getElementById('view-auth').classList.remove('active');
 
-  // Load profile
-  await loadProfile();
+    await loadProfile();
+    await loadOrCreateJournal();
 
-  // Load or create journal
-  await loadOrCreateJournal();
+    renderMantras();
+    renderAffirmationExamples();
+    renderDayStrip();
+    renderWeeklyGoalRows();
+    renderDailyGoalRows();
+    renderWellnessScores();
+    populateSettingsForm();
+    setCurrentDayFromDate();
 
-  // Render static UI elements
-  renderMantras();
-  renderAffirmationExamples();
-  renderDayStrip();
-  renderWeeklyGoalRows();
-  renderDailyGoalRows();
-  renderWellnessScores();
-  populateSettingsForm();
-
-  // Set current day to today based on start date
-  setCurrentDayFromDate();
-
-  // Navigate to dashboard
-  navigate('dashboard');
+    // New users (no plan set up yet) → show intro; returning users → dashboard
+    const isNewUser = !state.journal?.start_date;
+    navigate(isNewUser ? 'intro' : 'dashboard');
+  } catch (err) {
+    console.error('Sign-in error:', err);
+    document.getElementById('app-shell').classList.remove('hidden');
+    navigate('dashboard');
+  }
 }
 
 // ── Config Save ──────────────────────────────────────────────
@@ -360,22 +361,24 @@ function populateSettingsForm() {
 
 // ── Journal (30-day cycle) ───────────────────────────────────
 async function loadOrCreateJournal() {
+  // Use maybeSingle() instead of single() — returns null instead of error when no rows
   const { data, error } = await state.supabase
     .from('journals')
     .select('*')
     .eq('user_id', state.user.id)
     .order('cycle_number', { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
 
   if (data) {
     state.journal = data;
   } else {
-    // Create first journal
-    const { data: newJ } = await state.supabase
+    // First-time user — create their first journal cycle
+    const { data: newJ, error: insertError } = await state.supabase
       .from('journals')
       .insert({ user_id: state.user.id, cycle_number: 1 })
       .select().single();
+    if (insertError) { console.error('Journal create error:', insertError); state.journal = { id: null, cycle_number: 1 }; return; }
     state.journal = newJ;
   }
 
@@ -1348,7 +1351,7 @@ function navigate(viewName) {
 
   // Back button
   const back = document.getElementById('header-back');
-  const mainViews = ['dashboard','planning','daily','weekly','review','weekly'];
+  const mainViews = ['dashboard','planning','daily','weekly','review','intro'];
   if (back) back.classList.toggle('visible', !mainViews.includes(viewName));
 
   // View-specific logic

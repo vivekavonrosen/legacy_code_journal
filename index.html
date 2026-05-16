@@ -264,7 +264,8 @@
     /* ── Bottom Nav ─────────────────────────────────────────── */
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
-      background: rgba(13,18,64,0.96);
+      background: rgba(7,11,38,0.98);
+      border-top: 1px solid rgba(240,180,41,0.2);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border-top: 1px solid var(--border);
@@ -273,16 +274,19 @@
     }
     .nav-item {
       flex: 1; display: flex; flex-direction: column; align-items: center;
-      padding: 10px 4px; gap: 4px;
+      padding: 10px 4px; gap: 5px;
       background: none; border: none; cursor: pointer;
-      color: var(--text-dim);
-      font-size: 0.75rem; font-weight: 600;   /* was 0.65rem — too small */
-      text-transform: uppercase; letter-spacing: 0.05em;
+      color: #8fa0d0;   /* clear, readable inactive color — not dim purple */
+      font-size: 0.72rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.04em;
       transition: color var(--transition);
-      min-height: 44px;   /* touch target */
+      min-height: 48px;
     }
     .nav-item.active { color: var(--gold); }
-    .nav-item svg { width: 22px; height: 22px; }
+    .nav-item.active svg { stroke: var(--gold); }
+    .nav-item svg { width: 24px; height: 24px; stroke: #8fa0d0; transition: stroke var(--transition); }
+    .nav-item:hover { color: var(--text); }
+    .nav-item:hover svg { stroke: var(--text); }
 
     /* ── Page Header ────────────────────────────────────────── */
     .page-header {
@@ -849,6 +853,118 @@
     </div>
   </header>
 
+  <!-- ── INTRO / WELCOME VIEW ─────────────────────────── -->
+  <div id="view-intro" class="view">
+    <div style="max-width:680px;margin:0 auto;padding:32px 20px 40px;">
+
+      <!-- Hero -->
+      <div style="text-align:center;padding:32px 0 40px;">
+        <img src="logo-color.png" alt="Legacy Code Journal" style="width:80px;height:80px;object-fit:contain;margin:0 auto 20px;display:block;">
+        <div style="font-size:0.8rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;">Welcome to</div>
+        <h1 style="font-size:clamp(1.8rem,5vw,2.6rem);line-height:1.15;margin-bottom:16px;">The <span style="color:var(--gold);font-style:italic;">Legacy Code</span> Journal</h1>
+        <p style="font-size:1.05rem;color:var(--text);max-width:480px;margin:0 auto;line-height:1.8;">This is more than a planner. It is a framework for becoming — aligning your daily actions with your vision across business, relationships, health, and identity.</p>
+      </div>
+
+      <!-- About Viveka -->
+      <div style="background:linear-gradient(135deg,rgba(124,58,237,0.12) 0%,var(--bg-card) 100%);border:1px solid rgba(124,58,237,0.25);border-radius:var(--radius);padding:24px;margin-bottom:24px;">
+        <div style="font-size:0.75rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--purple-lt);margin-bottom:12px;">From Viveka von Rosen</div>
+        <p style="color:var(--text);font-size:0.95rem;line-height:1.8;margin-bottom:12px;">I created The Legacy Code from my own transformation. I was born with a title I never used — Countess. For years I downplayed it, dismissed it, hid from it. The moment I finally claimed that title — not out of ego, but out of honoring the truth of my identity — everything shifted.</p>
+        <p style="color:var(--text-muted);font-size:0.95rem;line-height:1.8;">You don't need to be a Countess. You might see yourself as a King, a Queen, a Warrior, a Healer, a Builder, or simply someone who knows there is more. The title doesn't matter. <strong style="color:var(--text);">The claiming does.</strong></p>
+      </div>
+
+      <!-- The 10 Pillars -->
+      <div style="margin-bottom:28px;">
+        <div style="font-size:0.8rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:20px;text-align:center;">Your Legacy Code — 10 Pillars of Transformation</div>
+
+        <div style="margin-bottom:16px;">
+          <div style="font-size:0.75rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;">LEGACY</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:var(--radius-sm);padding:14px 16px;">
+              <span style="font-weight:700;color:var(--gold);font-size:1rem;">L</span><span style="font-weight:700;color:var(--text);"> — LIBERATE</span>
+              <p style="margin:4px 0 0;font-size:0.9rem;color:var(--text-muted);">Release what was never yours to carry. Step forward unburdened.</p>
+            </div>
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:var(--radius-sm);padding:14px 16px;">
+              <span style="font-weight:700;color:var(--gold);font-size:1rem;">E</span><span style="font-weight:700;color:var(--text);"> — EMBODY</span>
+              <p style="margin:4px 0 0;font-size:0.9rem;color:var(--text-muted);">Own every chapter — light and shadow alike. Wholeness is your power.</p>
+            </div>
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:var(--radius-sm);padding:14px 16px;">
+              <span style="font-weight:700;color:var(--gold);font-size:1rem;">G</span><span style="font-weight:700;color:var(--text);"> — GENERATE</span>
+              <p style="margin:4px 0 0;font-size:0.9rem;color:var(--text-muted);">You are a creator. Every thought, word, and action builds the life you choose.</p>
+            </div>
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:var(--radius-sm);padding:14px 16px;">
+              <span style="font-weight:700;color:var(--gold);font-size:1rem;">A</span><span style="font-weight:700;color:var(--text);"> — AWAKEN</span>
+              <p style="margin:4px 0 0;font-size:0.9rem;color:var(--text-muted);">Open your eyes to what is emerging. Transformation is always within reach.</p>
+            </div>
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:var(--radius-sm);padding:14px 16px;">
+              <span style="font-weight:700;color:var(--gold);font-size:1rem;">C</span><span style="font-weight:700;color:var(--text);"> — CLAIM</span>
+              <p style="margin:4px 0 0;font-size:0.9rem;color:var(--text-muted);">You are the treasure. Stop asking permission to be everything you already are.</p>
+            </div>
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:var(--radius-sm);padding:14px 16px;">
+              <span style="font-weight:700;color:var(--gold);font-size:1rem;">Y</span><span style="font-weight:700;color:var(--text);"> — YIELD</span>
+              <p style="margin:4px 0 0;font-size:0.9rem;color:var(--text-muted);">Reap the harvest. Every seed of courage and faith is ready to bear fruit.</p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:0.75rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--purple-lt);margin-bottom:10px;">CODE</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-left:3px solid var(--purple-lt);border-radius:var(--radius-sm);padding:14px 16px;">
+              <span style="font-weight:700;color:var(--purple-lt);font-size:1rem;">C</span><span style="font-weight:700;color:var(--text);"> — CULTIVATE</span>
+              <p style="margin:4px 0 0;font-size:0.9rem;color:var(--text-muted);">Grow your circle, craft, and character with daily intention.</p>
+            </div>
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-left:3px solid var(--purple-lt);border-radius:var(--radius-sm);padding:14px 16px;">
+              <span style="font-weight:700;color:var(--purple-lt);font-size:1rem;">O</span><span style="font-weight:700;color:var(--text);"> — OWN</span>
+              <p style="margin:4px 0 0;font-size:0.9rem;color:var(--text-muted);">Own your story and your space — completely. No apology. No shrinking.</p>
+            </div>
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-left:3px solid var(--purple-lt);border-radius:var(--radius-sm);padding:14px 16px;">
+              <span style="font-weight:700;color:var(--purple-lt);font-size:1rem;">D</span><span style="font-weight:700;color:var(--text);"> — DECLARE</span>
+              <p style="margin:4px 0 0;font-size:0.9rem;color:var(--text-muted);">Speak your vision into existence. Your words are blueprints, not wishes.</p>
+            </div>
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-left:3px solid var(--purple-lt);border-radius:var(--radius-sm);padding:14px 16px;">
+              <span style="font-weight:700;color:var(--purple-lt);font-size:1rem;">E</span><span style="font-weight:700;color:var(--text);"> — ELEVATE</span>
+              <p style="margin:4px 0 0;font-size:0.9rem;color:var(--text-muted);">As you rise, bring others with you. Legacy is not how high you climb.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- How it works -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:28px;">
+        <div style="font-size:0.8rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;">How the Journal Works</div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;gap:14px;align-items:flex-start;">
+            <div style="width:32px;height:32px;min-width:32px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#0a0e2e;font-size:0.9rem;">1</div>
+            <div><strong style="color:var(--text);">30-Day Plan</strong><br><span style="color:var(--text-muted);font-size:0.9rem;">Set your vision, BHAG, affirmation, and action plan for the cycle.</span></div>
+          </div>
+          <div style="display:flex;gap:14px;align-items:flex-start;">
+            <div style="width:32px;height:32px;min-width:32px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#0a0e2e;font-size:0.9rem;">2</div>
+            <div><strong style="color:var(--text);">Weekly Planning</strong><br><span style="color:var(--text-muted);font-size:0.9rem;">Organize each week's goals, surprises, and finances.</span></div>
+          </div>
+          <div style="display:flex;gap:14px;align-items:flex-start;">
+            <div style="width:32px;height:32px;min-width:32px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#0a0e2e;font-size:0.9rem;">3</div>
+            <div><strong style="color:var(--text);">Daily Journal</strong><br><span style="color:var(--text-muted);font-size:0.9rem;">Track your push-back task, wellness, revenue activities, and reflections.</span></div>
+          </div>
+          <div style="display:flex;gap:14px;align-items:flex-start;">
+            <div style="width:32px;height:32px;min-width:32px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#0a0e2e;font-size:0.9rem;">4</div>
+            <div><strong style="color:var(--text);">AI Review</strong><br><span style="color:var(--text-muted);font-size:0.9rem;">Claude reads all your entries and surfaces themes, wins, and stuck points.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div style="text-align:center;padding:8px 0 24px;">
+        <p style="color:var(--text-muted);font-size:0.95rem;margin-bottom:20px;font-style:italic;">"Even the smallest step leads to monumental change. You don't need to leap. You need to begin."</p>
+        <button class="btn btn-primary" style="font-size:1.05rem;padding:16px 40px;border-radius:50px;" onclick="navigate('planning')">
+          Begin Your Journey →
+        </button>
+        <br><br>
+        <button class="btn btn-ghost btn-sm" onclick="navigate('dashboard')">I've done this before — go to dashboard</button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- ── DASHBOARD VIEW ─────────────────────────────────── -->
   <div id="view-dashboard" class="view">
     <div class="container">
@@ -1343,17 +1459,22 @@
       </div>
 
       <div class="settings-section">
-        <h3>AI Features (Claude)</h3>
-        <p style="font-size:0.85rem;margin-bottom:16px;">Your Anthropic API key is used for handwriting transcription and journal review. It's stored only in your browser.</p>
-        <div class="field">
-          <label for="settings-apikey">Anthropic API Key</label>
-          <div class="api-key-field">
-            <input type="password" id="settings-apikey" placeholder="sk-ant-...">
-            <button class="toggle-visibility" onclick="toggleApiKeyVisibility()">👁</button>
+        <button onclick="this.nextElementSibling.classList.toggle('hidden');this.querySelector('.toggle-arrow').textContent=this.nextElementSibling.classList.contains('hidden')?'▸':'▾';" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;width:100%;padding:0;">
+          <h3 style="margin:0;">AI Features (Claude)</h3>
+          <span class="toggle-arrow" style="color:var(--text-muted);font-size:1rem;">▸</span>
+        </button>
+        <div class="hidden" style="margin-top:16px;">
+          <p style="font-size:0.9rem;margin-bottom:16px;color:var(--text-muted);">Your Anthropic API key enables handwriting transcription and AI Journal Review. Stored only in your browser.</p>
+          <div class="field">
+            <label for="settings-apikey">Anthropic API Key</label>
+            <div class="api-key-field">
+              <input type="password" id="settings-apikey" placeholder="sk-ant-...">
+              <button class="toggle-visibility" onclick="toggleApiKeyVisibility()">👁</button>
+            </div>
           </div>
+          <button class="btn btn-secondary mt-16" onclick="saveApiKey()">Save API Key</button>
+          <p class="muted mt-8">Don't have a key? <a href="https://console.anthropic.com" target="_blank" style="color:var(--gold);">Get one free at console.anthropic.com →</a></p>
         </div>
-        <button class="btn btn-secondary mt-16" onclick="saveApiKey()">Save API Key</button>
-        <p class="muted mt-8" style="font-size:0.75rem;">Don't have an API key? <a href="https://console.anthropic.com" target="_blank" style="color:var(--gold);">Get one at console.anthropic.com →</a></p>
       </div>
 
       <div class="settings-section">
@@ -1374,24 +1495,24 @@
   <!-- Bottom Navigation -->
   <nav class="bottom-nav" id="bottom-nav">
     <button class="nav-item active" data-view="dashboard" onclick="navigate('dashboard')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       Home
     </button>
     <button class="nav-item" data-view="planning" onclick="navigate('planning')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       Plan
     </button>
+    <button class="nav-item" data-view="weekly" onclick="navigate('weekly')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Weekly
+    </button>
     <button class="nav-item" data-view="daily" onclick="navigate('daily')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
       Daily
     </button>
     <button class="nav-item" data-view="review" onclick="navigate('review')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
       Review
-    </button>
-    <button class="nav-item" data-view="weekly" onclick="navigate('weekly')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-      Weekly
     </button>
   </nav>
 
