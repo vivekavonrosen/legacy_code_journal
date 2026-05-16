@@ -131,13 +131,16 @@ async function onSignedIn(user) {
   if (state.user) return; // re-entrancy guard — prevents double-call from INITIAL_SESSION + getSession()
   try {
     state.user = user;
-    // Use inline styles — these beat every CSS rule, no specificity battles, no cache issues
+    // Hide auth/setup with inline styles (beat any CSS rule)
     const authEl = document.getElementById('view-auth');
     const setupEl = document.getElementById('view-setup');
     if (authEl)  { authEl.style.display  = 'none'; authEl.classList.remove('active'); }
     if (setupEl) { setupEl.style.display = 'none'; setupEl.classList.remove('active'); }
+    // Show app shell
     const shell = document.getElementById('app-shell');
     if (shell) { shell.style.display = ''; shell.classList.remove('hidden'); }
+    // Remove loading splash
+    document.getElementById('loading-splash')?.remove();
 
     await loadProfile();
     await loadOrCreateJournal();
@@ -211,19 +214,17 @@ async function signIn() {
     return;
   }
 
-  // Show "loading journal" message right away
-  err.textContent = '✓ Signed in! Loading your journal…';
+  // Show success message briefly, then reload the page.
+  // Supabase has already stored the session in localStorage.
+  // On fresh page load, boot() detects the session and opens the app directly —
+  // the auth screen never appears at all. This is the most reliable approach.
+  err.textContent = '✓ Signed in! Opening your journal…';
   err.style.background = 'rgba(16,185,129,0.15)';
   err.style.borderColor = 'rgba(16,185,129,0.3)';
   err.style.color = '#6ee7b7';
   err.classList.remove('hidden');
 
-  // Call onSignedIn() directly with the session that signInWithPassword already returned.
-  // This is more reliable than waiting for onAuthStateChange to fire SIGNED_IN.
-  // The !state.user guard inside onSignedIn() prevents a double-call if the listener also fires.
-  if (data?.session?.user) {
-    await onSignedIn(data.session.user);
-  }
+  setTimeout(() => window.location.reload(), 700);
 }
 
 async function signUp() {
@@ -1438,6 +1439,8 @@ function goBack() {
 }
 
 function showView(name) {
+  // Remove loading splash
+  document.getElementById('loading-splash')?.remove();
   // Clear all views
   document.querySelectorAll('.view').forEach(v => {
     v.classList.remove('active');
@@ -1446,7 +1449,7 @@ function showView(name) {
   // Hide app-shell
   const shell = document.getElementById('app-shell');
   if (shell) { shell.classList.add('hidden'); shell.style.display = ''; }
-  // Show the requested view with explicit display so it always appears
+  // Show the requested view — force display via inline style so it always appears
   const el = document.getElementById(`view-${name}`);
   if (el) {
     el.classList.add('active');

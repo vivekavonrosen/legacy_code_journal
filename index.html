@@ -1534,6 +1534,17 @@
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<!-- Loading Splash — shown during boot, removed once app or auth is ready -->
+<div id="loading-splash" style="
+  position: fixed; inset: 0; z-index: 9999;
+  background: #070b26;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 20px;
+">
+  <img src="logo-color.png" alt="" style="width: 72px; height: 72px; opacity: 0.9;">
+  <p style="color: #b0b8de; font-size: 0.9rem; margin: 0;">Loading your journal…</p>
+</div>
+
 <!-- App Script -->
 <script src="app.js"></script>
 <!-- Service Worker Registration -->
