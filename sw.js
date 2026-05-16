@@ -3,7 +3,7 @@
    Caches the app shell for offline use (iOS PWA compatible)
    ============================================================ */
 
-const CACHE_NAME = 'legacy-journal-v6';
+const CACHE_NAME = 'legacy-journal-v7';
 const SHELL_FILES = [
   '/',
   '/index.html',

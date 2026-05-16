@@ -299,11 +299,19 @@
     }
 
     /* ── Auth View ──────────────────────────────────────────── */
+    /* NOTE: display is intentionally NOT set here.
+       .view { display: none } hides it when inactive.
+       #view-auth.active overrides with display:flex when active.
+       Setting display:flex here would permanently override .view { display:none }
+       because an ID selector beats a class selector. */
     #view-auth {
       min-height: 100vh;
       padding-bottom: 0;
       background: radial-gradient(ellipse at top, #1a2068 0%, #070b26 60%);
-      display: flex; flex-direction: column;
+      flex-direction: column;
+    }
+    #view-auth.active {
+      display: flex;
     }
     .auth-hero {
       padding: 60px 24px 32px;

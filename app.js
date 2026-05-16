@@ -131,9 +131,13 @@ async function onSignedIn(user) {
   if (state.user) return; // re-entrancy guard — prevents double-call from INITIAL_SESSION + getSession()
   try {
     state.user = user;
-    document.getElementById('app-shell').classList.remove('hidden');
-    document.getElementById('view-auth').classList.remove('active');
-    document.getElementById('view-setup').classList.remove('active');
+    // Use inline styles — these beat every CSS rule, no specificity battles, no cache issues
+    const authEl = document.getElementById('view-auth');
+    const setupEl = document.getElementById('view-setup');
+    if (authEl)  { authEl.style.display  = 'none'; authEl.classList.remove('active'); }
+    if (setupEl) { setupEl.style.display = 'none'; setupEl.classList.remove('active'); }
+    const shell = document.getElementById('app-shell');
+    if (shell) { shell.style.display = ''; shell.classList.remove('hidden'); }
 
     await loadProfile();
     await loadOrCreateJournal();
@@ -1372,12 +1376,14 @@ function navigate(viewName) {
   if (VIEW_HISTORY.length > 10) VIEW_HISTORY.shift();
   state.currentView = viewName;
 
-  // Always ensure app-shell is visible when navigating to in-app views,
-  // and ensure the auth/setup overlays are hidden. This is the safety net that
-  // prevents a SIGNED_OUT race condition from leaving the app invisible.
-  document.getElementById('app-shell')?.classList.remove('hidden');
-  document.getElementById('view-auth')?.classList.remove('active');
-  document.getElementById('view-setup')?.classList.remove('active');
+  // Always ensure app-shell is visible and auth/setup are fully hidden.
+  // Inline styles beat every CSS rule — no specificity issues.
+  const _auth  = document.getElementById('view-auth');
+  const _setup = document.getElementById('view-setup');
+  const _shell = document.getElementById('app-shell');
+  if (_auth)  { _auth.style.display  = 'none'; _auth.classList.remove('active'); }
+  if (_setup) { _setup.style.display = 'none'; _setup.classList.remove('active'); }
+  if (_shell) { _shell.style.display = ''; _shell.classList.remove('hidden'); }
 
   // Hide all views
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -1432,10 +1438,20 @@ function goBack() {
 }
 
 function showView(name) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  // Clear all views
+  document.querySelectorAll('.view').forEach(v => {
+    v.classList.remove('active');
+    v.style.display = ''; // clear any inline style so CSS takes over
+  });
+  // Hide app-shell
+  const shell = document.getElementById('app-shell');
+  if (shell) { shell.classList.add('hidden'); shell.style.display = ''; }
+  // Show the requested view with explicit display so it always appears
   const el = document.getElementById(`view-${name}`);
-  if (el) el.classList.add('active');
-  document.getElementById('app-shell')?.classList.add('hidden');
+  if (el) {
+    el.classList.add('active');
+    el.style.display = (name === 'auth') ? 'flex' : 'block';
+  }
 }
 
 // ── Save Indicator ───────────────────────────────────────────
