@@ -85,8 +85,16 @@ async function boot() {
       showPasswordResetForm();
       return;
     }
-    if (event === 'SIGNED_IN' && session && !state.user) await onSignedIn(session.user);
-    if (event === 'SIGNED_OUT') { state.user = null; showView('auth'); }
+    // INITIAL_SESSION fires in Supabase v2 for returning users; SIGNED_IN fires on fresh login
+    if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session && !state.user) {
+      await onSignedIn(session.user);
+      return;
+    }
+    // Only redirect to auth if the user was previously loaded — prevents firing during initial boot
+    if (event === 'SIGNED_OUT' && state.user) {
+      state.user = null;
+      showView('auth');
+    }
   });
 
   // Check for recovery token in URL hash (handles direct page load from reset link)
@@ -108,21 +116,24 @@ async function boot() {
     err.classList.remove('hidden');
   }
 
-  // Check existing session
+  // Check existing session — guard with !state.user to avoid double-call if INITIAL_SESSION
+  // already fired in onAuthStateChange above
   const { data: { session } } = await state.supabase.auth.getSession();
   if (!session) {
-    showView('auth');
+    if (!state.user) showView('auth');
     return;
   }
 
-  await onSignedIn(session.user);
+  if (!state.user) await onSignedIn(session.user);
 }
 
 async function onSignedIn(user) {
+  if (state.user) return; // re-entrancy guard — prevents double-call from INITIAL_SESSION + getSession()
   try {
     state.user = user;
     document.getElementById('app-shell').classList.remove('hidden');
     document.getElementById('view-auth').classList.remove('active');
+    document.getElementById('view-setup').classList.remove('active');
 
     await loadProfile();
     await loadOrCreateJournal();
@@ -136,9 +147,10 @@ async function onSignedIn(user) {
     populateSettingsForm();
     setCurrentDayFromDate();
 
-    // New users (no plan set up yet) → show intro; returning users → dashboard
-    const isNewUser = !state.journal?.start_date;
-    navigate(isNewUser ? 'intro' : 'dashboard');
+    // Show intro on first sign-in of each session; after that go straight to dashboard
+    const seenIntro = sessionStorage.getItem('intro_seen');
+    sessionStorage.setItem('intro_seen', '1');
+    navigate(seenIntro ? 'dashboard' : 'intro');
   } catch (err) {
     console.error('Sign-in error:', err);
     document.getElementById('app-shell').classList.remove('hidden');
@@ -179,12 +191,30 @@ async function signIn() {
   const email = document.getElementById('login-email').value.trim();
   const pass  = document.getElementById('login-pass').value;
   const err   = document.getElementById('auth-error');
+  const btn   = document.querySelector('#auth-login .btn-primary');
   hideEl(err);
 
   if (!email || !pass) { showEl(err, 'Please enter your email and password.'); return; }
 
+  // Disable the form while we wait
+  if (btn) { btn.textContent = 'Signing in…'; btn.disabled = true; }
+
   const { error } = await state.supabase.auth.signInWithPassword({ email, password: pass });
-  if (error) { showEl(err, error.message); return; }
+
+  if (error) {
+    if (btn) { btn.textContent = 'Sign In'; btn.disabled = false; }
+    showEl(err, error.message);
+    return;
+  }
+
+  // Success — show a clear "loading" state so the user knows something is happening.
+  // onAuthStateChange SIGNED_IN will fire and call onSignedIn() from here.
+  err.textContent = '✓ Signed in! Loading your journal…';
+  err.style.background = 'rgba(16,185,129,0.15)';
+  err.style.borderColor = 'rgba(16,185,129,0.3)';
+  err.style.color = '#6ee7b7';
+  err.classList.remove('hidden');
+  // Keep button disabled — the view will transition once data is loaded
 }
 
 async function signUp() {
@@ -326,7 +356,7 @@ async function signOut() {
 // ── Profile ──────────────────────────────────────────────────
 async function loadProfile() {
   const { data } = await state.supabase
-    .from('profiles').select('*').eq('id', state.user.id).single();
+    .from('profiles').select('*').eq('id', state.user.id).maybeSingle();
   state.profile = data || {};
   if (state.profile.anthropic_key) localStorage.setItem('anthropic_key', state.profile.anthropic_key);
 }
@@ -1336,6 +1366,13 @@ function navigate(viewName) {
   if (prev !== viewName) VIEW_HISTORY.push(prev);
   if (VIEW_HISTORY.length > 10) VIEW_HISTORY.shift();
   state.currentView = viewName;
+
+  // Always ensure app-shell is visible when navigating to in-app views,
+  // and ensure the auth/setup overlays are hidden. This is the safety net that
+  // prevents a SIGNED_OUT race condition from leaving the app invisible.
+  document.getElementById('app-shell')?.classList.remove('hidden');
+  document.getElementById('view-auth')?.classList.remove('active');
+  document.getElementById('view-setup')?.classList.remove('active');
 
   // Hide all views
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
