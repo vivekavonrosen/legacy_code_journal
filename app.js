@@ -196,10 +196,10 @@ async function signIn() {
 
   if (!email || !pass) { showEl(err, 'Please enter your email and password.'); return; }
 
-  // Disable the form while we wait
+  // Show loading state immediately
   if (btn) { btn.textContent = 'Signing in…'; btn.disabled = true; }
 
-  const { error } = await state.supabase.auth.signInWithPassword({ email, password: pass });
+  const { data, error } = await state.supabase.auth.signInWithPassword({ email, password: pass });
 
   if (error) {
     if (btn) { btn.textContent = 'Sign In'; btn.disabled = false; }
@@ -207,14 +207,19 @@ async function signIn() {
     return;
   }
 
-  // Success — show a clear "loading" state so the user knows something is happening.
-  // onAuthStateChange SIGNED_IN will fire and call onSignedIn() from here.
+  // Show "loading journal" message right away
   err.textContent = '✓ Signed in! Loading your journal…';
   err.style.background = 'rgba(16,185,129,0.15)';
   err.style.borderColor = 'rgba(16,185,129,0.3)';
   err.style.color = '#6ee7b7';
   err.classList.remove('hidden');
-  // Keep button disabled — the view will transition once data is loaded
+
+  // Call onSignedIn() directly with the session that signInWithPassword already returned.
+  // This is more reliable than waiting for onAuthStateChange to fire SIGNED_IN.
+  // The !state.user guard inside onSignedIn() prevents a double-call if the listener also fires.
+  if (data?.session?.user) {
+    await onSignedIn(data.session.user);
+  }
 }
 
 async function signUp() {
