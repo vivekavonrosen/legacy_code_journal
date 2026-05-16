@@ -139,8 +139,6 @@ async function onSignedIn(user) {
     // Show app shell
     const shell = document.getElementById('app-shell');
     if (shell) { shell.style.display = ''; shell.classList.remove('hidden'); }
-    // Remove loading splash
-    document.getElementById('loading-splash')?.remove();
 
     await loadProfile();
     await loadOrCreateJournal();
@@ -357,10 +355,8 @@ async function sendPasswordReset() {
 
 async function signOut() {
   await state.supabase.auth.signOut();
-  state.user = null; state.journal = null;
-  state.weeklyEntries = {}; state.dailyEntries = {}; state.contacts = [];
-  document.getElementById('app-shell').classList.add('hidden');
-  showView('auth');
+  // Reload the page — clean slate, Supabase session is cleared, auth screen will appear
+  window.location.reload();
 }
 
 // ── Profile ──────────────────────────────────────────────────
@@ -1283,9 +1279,7 @@ function renderReviewResults(data) {
 
 // ── Dashboard Update ─────────────────────────────────────────
 function updateDashboard() {
-  if (!state.journal) return;
-
-  const j = state.journal;
+  const j = state.journal || {};  // always run — use empty object if journal not loaded yet
   const doneDays = Object.keys(state.dailyEntries).length;
   const pct = Math.round((doneDays / 30) * 100);
 
@@ -1439,8 +1433,6 @@ function goBack() {
 }
 
 function showView(name) {
-  // Remove loading splash
-  document.getElementById('loading-splash')?.remove();
   // Clear all views
   document.querySelectorAll('.view').forEach(v => {
     v.classList.remove('active');
